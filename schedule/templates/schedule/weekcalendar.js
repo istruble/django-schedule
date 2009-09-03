@@ -7,6 +7,7 @@ $(document).ready(function() {
     var id = 10;
     
 	$calendar.weekCalendar({
+    /* TODO input parameters dynamically from settings */
 		timeslotsPerHour : 4,
 		allowCalEventOverlap : true,
         firstDayOfWeek : 1,
@@ -16,6 +17,8 @@ $(document).ready(function() {
 		},
 		eventRender : function(calEvent, $event) {
 			if (calEvent.end.getTime() < new Date().getTime()) {
+        /* past events grayed out */
+        /* TODO this should be (a) optional, (b) styled by CSS file */
 				$event.css("backgroundColor", "#aaa");
 				$event.find(".time").css({
 							"backgroundColor" : "#999",
@@ -48,6 +51,8 @@ $(document).ready(function() {
                 },
                 buttons: {
                     save : function(){
+                        /* TODO save old params, send AJAX request to save new data, restore old data upon receiving
+                         * error message from server */
                         calEvent.id = id;
                         id++;
                         calEvent.start = new Date(startField.val());
@@ -72,8 +77,21 @@ $(document).ready(function() {
             
 		},
 		eventDrop : function(calEvent, $event) {
+        /* this is called when user finishes draggin event to different time 
+         * new data is in calEvent.start, calEvent.end */
+        /* TODO send AJAX request to save new data, restore old data upon receiving
+         * error message from server */
 		},
+    /* TODO save old data when event is being dragged so that eventDrop can roll back
+     * possible solution: implement eventDrag with pseudocode like:
+     * eventDrag:
+     *   if calEvent has no old data
+     *   then save old data
+     * eventDrop:
+     *   delete old data
+     * */ 
 		eventResize : function(calEvent, $event) {
+      /* TODO same as for eventDrop */
 		},
 		eventClick : function(calEvent, $event) {
             
@@ -81,6 +99,7 @@ $(document).ready(function() {
                 return;
             }
             
+            /* TODO add an editable date field to dialog */
             var $dialogContent = $("#event_edit_container");
             resetForm($dialogContent);
             var startField = $dialogContent.find("select[name='start']").val(calEvent.start);
@@ -99,7 +118,8 @@ $(document).ready(function() {
                 },
                 buttons: {
                     save : function(){
-   
+                        /* TODO save old params, send AJAX request to save new data, restore old data upon receiving
+                         * error message from server */
                         calEvent.start = new Date(startField.val());
                         calEvent.end = new Date(endField.val());
                         calEvent.title = titleField.val();
@@ -133,6 +153,9 @@ $(document).ready(function() {
             
 		},
 		data : function(start, end, callback) {
+            /* this is called (a) upon page load and (b) when week is changed 
+             * start and end are beginning/end of selected week */
+            /* TODO implement and use AJAX callback getEventData(start, end) */
             callback(getEventData());
         }
 	});
