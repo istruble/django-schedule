@@ -30,6 +30,19 @@ USE_NEW_OCCURRENCE_CLASS_VALUES = getattr(settings,
                                           'USE_NEW_OCCURRENCE_CLASS_VALUES',
                                           False)
 
+# Defaulting to 'starts_ends' instead of 'starts ends' to work with the
+# html+css found in project_sample.
+OCCURRENCE_CLASS_CSS_VALUES = getattr(settings,
+                                      'OCCURRENCE_CLASS_CSS_VALUES',
+                                      ('spans','starts','ends','starts_ends'))
+
+OCCURRENCE_CLASS_CSS = {
+    OCCURRENCE_SPANS: OCCURRENCE_CLASS_CSS_VALUES[0],
+    OCCURRENCE_STARTS: OCCURRENCE_CLASS_CSS_VALUES[1],
+    OCCURRENCE_ENDS: OCCURRENCE_CLASS_CSS_VALUES[2],
+    OCCURRENCE_STARTS_ENDS: OCCURRENCE_CLASS_CSS_VALUES[3],
+}
+
 
 weekday_names = []
 weekday_abbrs = []
@@ -110,9 +123,11 @@ class Period(object):
             occurrence_class += OCCURRENCE_STARTS
         if occurrence.end >= start and occurrence.end < end:
             occurrence_class += OCCURRENCE_ENDS
+        css_class = OCCURRENCE_CLASS_CSS[occurrence_class]
         if self._use_old_occurence_class_values:
             occurrence_class = MAP_TO_OLD_OCCURRENCE_CLASS[occurrence_class]
-        return {'occurrence': occurrence, 'class': occurrence_class}
+        return {'occurrence': occurrence, 'class': occurrence_class,
+                'css_class': css_class}
 
     def get_occurrence_partials(self):
         occurrence_dicts = []

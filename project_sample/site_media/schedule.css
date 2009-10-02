@@ -19,16 +19,27 @@ div.occ_column {
   top:0px;
 }
 
-div.occ {
+div.occ { /* aka. div.occ.starts_ends */
   position:absolute;
   border:1px solid red;
   background-color:#eee;
   cursor:pointer;
   overflow:hidden;
+  margin-top: -1px; /* this may screw up IE layout */
+}
+div.occ.spans {
+  border-top: 4px dotted gray;
+  border-bottom: 4px dotted gray;
+}
+div.occ.starts {
+  border-bottom: 4px dotted gray;
+}
+div.occ.ends {
+  border-top: 4px dotted gray;
 }
 
 div.occ a:hover {
-    background-color:gray;
+  background-color: gray;
 }
 
 div.occ_column div.cancelled {
@@ -44,39 +55,6 @@ div.occ_column div.cancelled .actions {
 td.daynumber div.daycell .cancelled {
   background-color:inherit;
   color:gray;
-}
-
-td.daynumber div.daycell .eventcell0 {
-  border-right:none;
-  margin-right:-1px;
-}
-
-td.daynumber div.daycell .eventcell1 {
-}
-
-td.daynumber div.daycell .eventcell2 {
-  border-right:none;
-  margin-right:-1px;
-  border-left:none;
-  margin-left:-1px;
-}
-
-td.daynumber div.daycell .eventcell3 {
-  border-left:none;
-  margin-left:-1px;
-}
-
-div.type0 {
-  border-bottom:4px dotted gray;
-}
-
-div.type3 {
-  border-top:4px dotted gray;
-}
-
-div.type2 {
-  border-top:4px dotted gray;
-  border-bottom:4px dotted gray;
 }
 
 /**** EVENT DETAIL DIALOG ****/
@@ -99,48 +77,48 @@ div.occ span.actions span.edit {padding-right:3px;}
 /**** MONTH TABLE ****/
 
 table.calendar {
-	border-collapse: separate;
-	border-spacing: 2px;
+  border-collapse: separate;
+  border-spacing: 2px;
   border:2px solid #f0f0f0;
 }
 
 .dateheader {
-	height: 30px;
-	text-align: center
+  height: 30px;
+  text-align: center
 }
 
 .daysofweek {
-	height: 20px;
-	text-align: center
+  height: 20px;
+  text-align: center
 }
 
 table.calendar td {
   text-align:left;
-	margin: 2px;
-	padding: 1px;
+  margin: 2px;
+  padding: 1px;
 }
 
 table.calendar td.daynumber {
-	font-size: 8pt;
-	vertical-align: top
+  font-size: 8pt;
+  vertical-align: top
 }
 
 table.calendar td.noday {
-	background-color: #eef
+  background-color: #eef
 }
 
 table.calendar td.free {
-	background-color: #c5dbff
+  background-color: #c5dbff
 }
 
 table.calendar td.busy {
-	background-color: #ffcece
+  background-color: #ffcece
 }
 
 table.calendar td.small {
-	width: 28px;
-	height: 20px;
-	text-align: center
+  width: 28px;
+  height: 20px;
+  text-align: center
 }
 
 td.daynumber { height:50px;}
@@ -157,28 +135,41 @@ td.daynumber div.header a {
 }
 
 td.small div.header a {
-    padding:0;
+  padding:0;
 }
 
-td.daynumber div.eventcell {
-    background:#f0f0f0;
-    border:1px dotted grey;
-    clear:both;
-    cursor:pointer;
-    margin:0 1px 3px 1px;
-    overflow:auto;
+div.eventcell { /* aka .spans */
+  background:#f0f0f0;
+  border: 1px dotted grey;
+  border-width: 1px 0;
+  clear:both;
+  cursor:pointer;
+  margin:0 -1px 3px -1px;
+  overflow:auto;
 }
+
+div.eventcell.starts, div.eventcell.starts_ends {
+  border-left-width: 1px;
+  margin-left: 1px;
+}
+
+div.eventcell.ends, div.eventcell.starts_ends {
+  border-right-width: 1px;
+  margin-right: 1px;
+}
+
+
 
 td.daynumber div.starttime {
-    float:left;
-    width:40px;
+  float:left;
+  width:40px;
 }
 
 td.daynumber div.eventdesc {
-    float:left;
-    height:1em;
-    overflow:hidden;
-    width:75px;
+  float:left;
+  height:1em;
+  overflow:hidden;
+  width:75px;
 }
 
 /**** WEEK VIEW ****/
@@ -227,33 +218,33 @@ div.weekday1 span.time {
 /**** FORMS AND WIDGETS ****/
 
 div.time-picker {
-    position: absolute;
-    height: 200px;
-    width:80px; /* needed for IE */
-    overflow: auto;
-    background: #fff;
-    border: 1px solid #000;
-    z-index: 99;
+  position: absolute;
+  height: 200px;
+  width:80px; /* needed for IE */
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #000;
+  z-index: 99;
 }
 
 div.time-picker-12hours {
-    width:6em; /* needed for IE */
+  width:6em; /* needed for IE */
 }
 
 div.time-picker ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
 }
 
 div.time-picker li {
-    padding: 1px;
-    cursor: pointer;
+  padding: 1px;
+  cursor: pointer;
 }
 
 div.time-picker li.selected {
-    background: #316AC5;
-    color: #fff;
+  background: #316AC5;
+  color: #fff;
 }
 
 #id_start_1, #id_end_1 { width:80px;}
@@ -299,5 +290,5 @@ div.navigation a {
 }
 
 div.tablewrapper {
-    text-align:center;
+  text-align:center;
 }

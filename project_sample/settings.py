@@ -95,3 +95,5 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 FIRST_DAY_OF_WEEK = 1 # Monday
+USE_NEW_OCCURRENCE_CLASS_VALUES = True
+OCCURRENCE_CLASS_CSS_VALUES = ('spans','starts','ends','starts_ends')
