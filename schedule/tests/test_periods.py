@@ -7,7 +7,8 @@ from django.core.urlresolvers import reverse
 
 from schedule.conf.settings import FIRST_DAY_OF_WEEK
 from schedule.models import Event, Rule, Occurrence, Calendar
-from schedule.periods import Period, Month, Day, Year
+from schedule.periods import Period, Month, Week, Day, Year
+from schedule.periods import OCCURRENCE_SPANS, OCCURRENCE_STARTS, OCCURRENCE_ENDS, OCCURRENCE_STARTS_ENDS
 from schedule.utils import EventListManager
 
 class TestPeriod(TestCase):
@@ -25,11 +26,24 @@ class TestPeriod(TestCase):
                 'rule': rule,
                 'calendar': cal
                }
+        three_day_data = {
+            'title': '3-Day Event',
+            'start': datetime.datetime(2008, 1, 1, 8, 0),
+            'end': datetime.datetime(2008, 1, 3, 9, 0),
+            'end_recurring_period' : datetime.datetime(2008, 5, 5, 0, 0),
+            'calendar': cal
+            }
         recurring_event = Event(**data)
         recurring_event.save()
+        self.recurring_event = recurring_event
+        three_day_event = Event(**three_day_data)
+        three_day_event.save()
+        self.three_day_event = three_day_event
         self.period = Period(events=Event.objects.all(),
                             start = datetime.datetime(2008,1,4,7,0),
                             end = datetime.datetime(2008,1,21,7,0))
+        self.week_period = Week(events=Event.objects.all(),
+                                date=three_day_event.start)
 
     def test_get_occurrences(self):
         occurrence_list = self.period.occurrences
@@ -39,6 +53,14 @@ class TestPeriod(TestCase):
              '2008-01-19 08:00:00 to 2008-01-19 09:00:00'])
 
     def test_get_occurrence_partials(self):
+        self._test_get_occurrence_partials(OCCURRENCE_STARTS_ENDS)
+
+    def test_get_occurrence_partials_old(self):
+        self._test_get_occurrence_partials(1, False)
+
+    def _test_get_occurrence_partials(self, expected_class,
+                                      using_new_occ_values=True):
+        self.period.use_new_occurrence_class_values(using_new_occ_values)
         occurrence_dicts = self.period.get_occurrence_partials()
         self.assertEqual(
             [(occ_dict["class"],
@@ -46,13 +68,13 @@ class TestPeriod(TestCase):
             occ_dict["occurrence"].end)
             for occ_dict in occurrence_dicts],
             [
-                (1,
+                (expected_class,
                  datetime.datetime(2008, 1, 5, 8, 0),
                  datetime.datetime(2008, 1, 5, 9, 0)),
-                (1,
+                (expected_class,
                  datetime.datetime(2008, 1, 12, 8, 0),
                  datetime.datetime(2008, 1, 12, 9, 0)),
-                (1,
+                (expected_class,
                  datetime.datetime(2008, 1, 19, 8, 0),
                  datetime.datetime(2008, 1, 19, 9, 0))
             ])
@@ -63,6 +85,41 @@ class TestPeriod(TestCase):
                                           datetime.datetime(2008,1,4,7,12) )
         self.failIf( slot.has_occurrences() )
 
+    def test_occurrence_classes(self):
+        self.period.use_new_occurrence_class_values(True)
+        self.week_period.use_new_occurrence_class_values(True)
+        self.assert_( self.period.has_occurrences() )
+
+        single_day_occ = self.period.get_occurrence_partials()[0]
+        self.assertEqual(OCCURRENCE_STARTS_ENDS, single_day_occ["class"])
+
+        week = self.week_period
+        # week's events look like this:
+        # Su Mu Tu We Th Fr Sa Su
+        # -- -- e1 e1 e1 -- e2 --
+        # (extra Sunday included to allow for fdow = 0 or 1)
+
+        e1 = self.three_day_event
+        e2 = self.recurring_event
+        expected = [(None,None),
+                    (None,None),
+                    (e1,OCCURRENCE_STARTS),
+                    (e1,OCCURRENCE_SPANS),
+                    (e1,OCCURRENCE_ENDS),
+                    (None,None),
+                    (e2,OCCURRENCE_STARTS_ENDS),
+                    ]
+        if FIRST_DAY_OF_WEEK == 1:
+            # just wrapping the empty sunday around if the fdow is monday
+            expected = expected[1:] + expected[:1]
+        for (expect, day) in zip(expected, week.get_days()):
+            (expected_event, expected_occ_class) = expect
+            expecting_occurrences = not expected_event is None
+            self.assertEqual(expecting_occurrences, day.has_occurrences())
+            if expecting_occurrences:
+                occ = day.get_occurrence_partials()[0]
+                self.assertEqual(expected_occ_class, occ['class'])
+                self.assertEqual(expected_event, occ['occurrence'].event)
 
 class TestYear(TestCase):
 
@@ -205,7 +262,7 @@ class TestDay(TestCase):
 
 
 class TestOccurrencePool(TestCase):
-    
+
     def setUp(self):
         rule = Rule(frequency = "WEEKLY")
         rule.save()

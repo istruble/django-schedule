@@ -7,6 +7,30 @@ from schedule.conf.settings import FIRST_DAY_OF_WEEK, SHOW_CANCELLED_OCCURRENCES
 from schedule.models import Occurrence
 from schedule.utils import OccurrenceReplacer
 
+# Some magic numbers to simplify calculation and display logic.
+# @@@ TODO - expose these as a template tag?
+OCCURRENCE_SPANS = 0
+OCCURRENCE_STARTS = 1
+OCCURRENCE_ENDS = 2
+OCCURRENCE_STARTS_ENDS = 3
+MAP_TO_OLD_OCCURRENCE_CLASS = {
+    OCCURRENCE_SPANS: 2,
+    OCCURRENCE_STARTS: 0,
+    OCCURRENCE_ENDS: 3,
+    OCCURRENCE_STARTS_ENDS: 1,
+}
+MAP_FROM_OLD_OCCURRENCE_CLASS = {}
+for (new, old) in MAP_TO_OLD_OCCURRENCE_CLASS.items():
+    MAP_FROM_OLD_OCCURRENCE_CLASS[old] = new
+# Temporary setting for controlling the use of OCCURRENCE_*
+# constants instead of the old magic numbers.
+# This controls behaviour of Period.classify_occurrence method
+import settings
+USE_NEW_OCCURRENCE_CLASS_VALUES = getattr(settings,
+                                          'USE_NEW_OCCURRENCE_CLASS_VALUES',
+                                          False)
+
+
 weekday_names = []
 weekday_abbrs = []
 if FIRST_DAY_OF_WEEK == 1:
@@ -36,6 +60,14 @@ class Period(object):
         self.occurrence_pool = occurrence_pool
         if parent_persisted_occurrences is not None:
             self._persisted_occurrences = parent_persisted_occurrences
+        self.use_new_occurrence_class_values(USE_NEW_OCCURRENCE_CLASS_VALUES)
+
+    def use_new_occurrence_class_values(self, value=True):
+        """
+        Temporary method to support switching between the old magic numbers
+        used for occurrence 'class' values and the OCCURRENCE_* constants.
+        """
+        self._use_old_occurence_class_values = not value
 
     def __eq__(self, period):
         return self.start==period.start and self.end==period.end and self.events==period.events
@@ -70,23 +102,17 @@ class Period(object):
     def classify_occurrence(self, occurrence):
         if occurrence.cancelled and not SHOW_CANCELLED_OCCURRENCES:
             return
-        if occurrence.start > self.end or occurrence.end < self.start:
+        start, end = self.start, self.end
+        if occurrence.start > end or occurrence.end < start:
             return None
-        started = False
-        ended = False
-        if occurrence.start >= self.start and occurrence.start < self.end:
-            started = True
-        if occurrence.end >=self.start and occurrence.end< self.end:
-            ended = True
-        if started and ended:
-            return {'occurrence': occurrence, 'class': 1}
-        elif started:
-            return {'occurrence': occurrence, 'class': 0}
-        elif ended:
-            return {'occurrence': occurrence, 'class': 3}
-        # it existed during this period but it didnt begin or end within it
-        # so it must have just continued
-        return {'occurrence': occurrence, 'class': 2}
+        occurrence_class = OCCURRENCE_SPANS # doesn't start or end
+        if occurrence.start >= start and occurrence.start < end:
+            occurrence_class += OCCURRENCE_STARTS
+        if occurrence.end >= start and occurrence.end < end:
+            occurrence_class += OCCURRENCE_ENDS
+        if self._use_old_occurence_class_values:
+            occurrence_class = MAP_TO_OLD_OCCURRENCE_CLASS[occurrence_class]
+        return {'occurrence': occurrence, 'class': occurrence_class}
 
     def get_occurrence_partials(self):
         occurrence_dicts = []
@@ -121,7 +147,6 @@ class Period(object):
             yield self.create_sub_period(cls, period.start)
             period = period.next()
 
-
 class Year(Period):
     def __init__(self, events, date=None, parent_persisted_occurrences=None):
         if date is None:
@@ -155,8 +180,8 @@ class Year(Period):
 
 class Month(Period):
     """
-    The month period has functions for retrieving the week periods within this period
-    and day periods within the date.
+    The month period has functions for retrieving the week periods
+    within this period and day periods within the date.
     """
     def __init__(self, events, date=None, parent_persisted_occurrences=None,
         occurrence_pool=None):
