@@ -8,7 +8,6 @@ from schedule.models import Occurrence
 from schedule.utils import OccurrenceReplacer
 
 # Some magic numbers to simplify calculation and display logic.
-# @@@ TODO - expose these as a template tag?
 OCCURRENCE_SPANS = 0
 OCCURRENCE_STARTS = 1
 OCCURRENCE_ENDS = 2
@@ -19,9 +18,6 @@ MAP_TO_OLD_OCCURRENCE_CLASS = {
     OCCURRENCE_ENDS: 3,
     OCCURRENCE_STARTS_ENDS: 1,
 }
-MAP_FROM_OLD_OCCURRENCE_CLASS = {}
-for (new, old) in MAP_TO_OLD_OCCURRENCE_CLASS.items():
-    MAP_FROM_OLD_OCCURRENCE_CLASS[old] = new
 # Temporary setting for controlling the use of OCCURRENCE_*
 # constants instead of the old magic numbers.
 # This controls behaviour of Period.classify_occurrence method
@@ -113,6 +109,17 @@ class Period(object):
             return self._persisted_occurrences
 
     def classify_occurrence(self, occurrence):
+        """
+        Determines if 'occurrence' spans, only starts, only ends
+        or both starts and ends in this period.
+
+        Returns None if it does not exist in this period,
+        otherwise returns a dict with these keys:
+          "occurrence"  - the occurrence checked
+          "class"       - raw numeric classification
+          "css_class"   - css class string corresponding to classification
+          "spans", "only_starts", "only_ends", "starts_ends" - Boolean
+        """
         if occurrence.cancelled and not SHOW_CANCELLED_OCCURRENCES:
             return
         start, end = self.start, self.end
@@ -126,8 +133,13 @@ class Period(object):
         css_class = OCCURRENCE_CLASS_CSS[occurrence_class]
         if self._use_old_occurence_class_values:
             occurrence_class = MAP_TO_OLD_OCCURRENCE_CLASS[occurrence_class]
-        return {'occurrence': occurrence, 'class': occurrence_class,
-                'css_class': css_class}
+        return {'occurrence': occurrence,
+                'class': occurrence_class,
+                'css_class': css_class,
+                'spans':       occurrence_class == OCCURRENCE_SPANS,
+                'only_starts': occurrence_class == OCCURRENCE_STARTS,
+                'only_ends':   occurrence_class == OCCURRENCE_ENDS,
+                'starts_ends': occurrence_class == OCCURRENCE_STARTS_ENDS}
 
     def get_occurrence_partials(self):
         occurrence_dicts = []

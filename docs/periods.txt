@@ -35,17 +35,12 @@ This method is for getting the occurrences from the list of passed in events. It
 ``classify_occurrence(occurrence)``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You use this method to determine how the Occurrence ``occurrence`` relates to the period. This method returns a dictionary. The keys are ``"class"`` and ``"occurrence"``.  The class key returns a a number from 0 to 3 and the occurrence key returns the occurrence.
+You use this method to determine how the Occurrence ``occurrence`` relates to the period. This method returns a dictionary with the following keys: ``"occurrence"``, ``"class"``, ``"css_class"``, ``"spans"``, ``"only_starts"``, ``"only_ends"``, ``"starts_ends"``.
 
-Classes:
-
-0: Only started during this period.
-
-1: Started and ended during this period.
-
-2: Didn't start or end in this period, but does exist during this period.
-
-3: Only ended during this period.
+ * ``"occurrence"`` returns the occurrence.
+ * ``"class"`` returns one of the ``OCCURRENCE_{SPANS|STARTS|ENDS|STARTS_ENDS}`` constants.
+ * ``"css_class"`` returns a css class string.
+ * one of ``"spans"``, ``"only_starts"``, ``"only_ends"`` and ``"starts_ends"`` is set to True and the others False based on the occurrence's classification.
 
 ``get_occurrence_partials()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +63,7 @@ This method returns whether there are any occurrences in this period
 Year
 ----
 
-The year period is instaniated with a list of events and a date or datetime object. It will resemble the year in which that date exists. 
+The year period is instaniated with a list of events and a date or datetime object. It will resemble the year in which that date exists.
 
 >>> p = Year(events, datetime.datetime(2008,4,1))
 >>> p.start

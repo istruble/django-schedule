@@ -244,6 +244,10 @@ def _cook_occurrences(period, occs, width, height):
         o.max = len([n for n in occs if not(n.end<=o.start or n.start>=o.end)])
     for o in occs:
         o.cls = o.data['class']
+        o.spans = o.data['spans']
+        o.only_starts = o.data['only_starts']
+        o.only_ends = o.data['only_ends']
+        o.starts_ends = o.data['starts_ends']
         o.css_class = o.data['css_class']
         o.real_start = max(o.start, period.start)
         o.real_end = min(o.end, period.end)

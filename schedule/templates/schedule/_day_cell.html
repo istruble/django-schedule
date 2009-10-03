@@ -19,14 +19,10 @@
                         <div class="eventcell {{o.css_class}}{% if o.occurrence.cancelled %} cancelled{% endif %}"
                             href="#{% hash_occurrence o.occurrence %}" onclick="openDetail(this);">
                             <div class="starttime">
-                            {# tried to keep the ordering the same as before: #}
-                            {# only-starts, starts-and-ends, spans, only-ends #}
-                            {# I prefer 0,1,2,3 which would correspond to: #}
-                            {# spans, starts, ends, starts-and-ends #}
-                                {% ifequal o.class 3 %}{{ o.occurrence.start|time:"G:i" }}{% endifequal %}
-                                {% ifequal o.class 1 %}{{ o.occurrence.start|time:"G:i" }}{% endifequal %}
-                                {% ifequal o.class 0 %}(All day){% endifequal %}
-                                {% ifequal o.class 2 %}Ends at {{ o.occurrence.end|time:"G:i" }}{% endifequal %}
+                                {% if o.starts_ends %}{{ o.occurrence.start|time:"G:i" }}{% endif %}
+                                {% if o.only_starts %}{{ o.occurrence.start|time:"G:i" }}{% endif %}
+                                {% if o.spans %}(All day){% endif %}
+                                {% if o.only_ends %}Ends at {{ o.occurrence.end|time:"G:i" }}{% endif %}
                             </div>
                             <div class="eventdesc">
                                 {% title o.occurrence %}
