@@ -39,21 +39,20 @@ OCCURRENCE_CLASS_CSS = {
     OCCURRENCE_STARTS_ENDS: OCCURRENCE_CLASS_CSS_VALUES[3],
 }
 
+def get_weekday_names_and_abbrs(first_day_of_week):
+    """Utility function to get shifted days of the week.
 
-weekday_names = []
-weekday_abbrs = []
-if FIRST_DAY_OF_WEEK == 1:
-    # The calendar week starts on Monday
+    first_day_of_week is 0/Sun based.
+    """
+    names = []
+    abbrs = []
     for i in range(7):
-        weekday_names.append( WEEKDAYS[i] )
-        weekday_abbrs.append( WEEKDAYS_ABBR[i] )
-else:
-    # The calendar week starts on Sunday, not Monday
-    weekday_names.append( WEEKDAYS[6] )
-    weekday_abbrs.append( WEEKDAYS_ABBR[6] )
-    for i in range(6):
-        weekday_names.append( WEEKDAYS[i] )
-        weekday_abbrs.append( WEEKDAYS_ABBR[i] )
+        # -1 shift since WEEKDAYS* data is based on FDOW=1/Mon
+        i = (i - 1 + first_day_of_week) % 7
+        names.append( WEEKDAYS[i] )
+        abbrs.append( WEEKDAYS_ABBR[i] )
+    return (names, abbrs)
+(weekday_names, weekday_abbrs) = get_weekday_names_and_abbrs(FIRST_DAY_OF_WEEK)
 
 
 class Period(object):
@@ -305,18 +304,9 @@ class Week(Period):
             week = week.date()
         # Adjust the start datetime to midnight of the week datetime
         start = datetime.datetime.combine(week, datetime.time.min)
-        # Adjust the start datetime to Monday or Sunday of the current week
-        sub_days = 0
-        if FIRST_DAY_OF_WEEK == 1:
-            # The week begins on Monday
-            sub_days = start.isoweekday() - 1
-        else:
-            # The week begins on Sunday
-            sub_days = start.isoweekday()
-            if sub_days == 7:
-                sub_days = 0
-        if sub_days > 0:
-            start = start - datetime.timedelta(days=sub_days)
+        shift_to_fdow = (start.isoweekday() - FIRST_DAY_OF_WEEK) % 7
+        if shift_to_fdow > 0:
+            start = start - datetime.timedelta(days=shift_to_fdow)
         end = start + datetime.timedelta(days=7)
         return start, end
 
